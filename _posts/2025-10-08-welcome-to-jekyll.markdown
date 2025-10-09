@@ -1,5 +1,5 @@
 ---
-title: Bienvenido a La SectASIR
+title: Presentación de La SectASIR
 date: 2025-10-09 10:00:00 +0100
 categories: [General, Bienvenida]
 tags: [introducción, asir, administración-sistemas]
