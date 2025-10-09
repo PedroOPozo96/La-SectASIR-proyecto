@@ -316,13 +316,26 @@ echo ""
 # ========================================
 print_step "Desplegando en producción..."
 
-cd _site
+# Directorio del repositorio HTML
+HTML_REPO="../La-SectASIR-html"
+
+# Verificar que existe el directorio
+if [ ! -d "$HTML_REPO" ]; then
+    print_error "No existe el directorio: $HTML_REPO"
+    echo "Crea el directorio e inicializa el repositorio git primero"
+    exit 1
+fi
+
+cd "$HTML_REPO"
 
 # Verificar si es un repositorio git
 if [ ! -d ".git" ]; then
-    print_error "El directorio _site no es un repositorio git"
-    echo "Inicializa el repositorio manualmente primero"
-    cd ..
+    print_error "El directorio $HTML_REPO no es un repositorio git"
+    echo "Inicializa el repositorio manualmente primero con:"
+    echo "  cd $HTML_REPO"
+    echo "  git init"
+    echo "  git remote add origin <URL-del-repositorio-remoto>"
+    cd - > /dev/null
     exit 1
 fi
 
