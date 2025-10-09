@@ -1,29 +1,72 @@
 ---
-layout: post
-title:  "Welcome to Jekyll!"
-date:   2025-10-08 08:58:33 +0200
-categories: jekyll update
+title: Bienvenido a La SectASIR
+date: 2025-10-09 10:00:00 +0100
+categories: [General, Bienvenida]
+tags: [introducción, asir, administración-sistemas]
+pin: true
 ---
-You’ll find this post in your `_posts` directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run `jekyll serve`, which launches a web server and auto-regenerates your site when a file is updated.
 
-Jekyll requires blog post files to be named according to the following format:
+# ¡Bienvenido a La SectASIR!
 
-`YEAR-MONTH-DAY-title.MARKUP`
+Este es el espacio técnico dedicado a la **Administración de Sistemas Informáticos y Redes**.
 
-Where `YEAR` is a four-digit number, `MONTH` and `DAY` are both two-digit numbers, and `MARKUP` is the file extension representing the format used in the file. After that, include the necessary front matter. Take a look at the source for this post to get an idea about how it works.
+## ¿Qué es ASIR?
 
-Jekyll also offers powerful support for code snippets:
+ASIR (Administración de Sistemas Informáticos y Redes) es una especialización técnica que forma profesionales capaces de:
 
-{% highlight ruby %}
-def print_hi(name)
-  puts "Hi, #{name}"
-end
-print_hi('Tom')
-#=> prints 'Hi, Tom' to STDOUT.
-{% endhighlight %}
+- 🖥️ Administrar sistemas operativos (Linux y Windows)
+- 🌐 Configurar y mantener redes empresariales
+- 🔒 Implementar medidas de seguridad informática
+- ☁️ Gestionar infraestructuras cloud
+- 🛠️ Automatizar tareas mediante scripting
 
-Check out the [Jekyll docs][jekyll-docs] for more info on how to get the most out of Jekyll. File all bugs/feature requests at [Jekyll’s GitHub repo][jekyll-gh]. If you have questions, you can ask them on [Jekyll Talk][jekyll-talk].
+## ¿Qué Encontrarás Aquí?
 
-[jekyll-docs]: https://jekyllrb.com/docs/home
-[jekyll-gh]:   https://github.com/jekyll/jekyll
-[jekyll-talk]: https://talk.jekyllrb.com/
+En este blog publicaremos contenido sobre:
+
+### 1. Tutoriales Prácticos
+Guías paso a paso sobre configuración de servicios, instalación de software y resolución de problemas.
+
+### 2. Casos de Uso Reales
+Ejemplos de implementaciones en entornos reales de trabajo.
+
+### 3. Mejores Prácticas
+Recomendaciones sobre seguridad, optimización y mantenimiento.
+
+### 4. Laboratorios y Prácticas
+Ejercicios para montar tu propio lab y practicar.
+
+## Categorías Principales
+
+- **Sistemas Linux**: Administración, configuración y scripting
+- **Redes**: Protocolos, configuración y troubleshooting
+- **Seguridad**: Hardening, firewalls y VPNs
+- **Virtualización**: VMware, Proxmox, Docker
+- **Servicios**: Web, DNS, DHCP, correo, bases de datos
+- **Automatización**: Ansible, scripts Bash, Python
+
+## Nuestro Primer Proyecto
+
+Para comenzar, estaremos publicando una serie sobre:
+
+> **"Montando un Servidor Linux desde Cero"**
+> 
+> Una guía completa que incluirá:
+> - Instalación de Debian/Ubuntu Server
+> - Configuración básica y hardening
+> - Instalación de servicios (Apache, MySQL, PHP)
+> - Configuración de firewall
+> - Certificados SSL/TLS
+> - Backup y monitorización
+
+¡Permanece atento!
+
+## Únete a la Comunidad
+
+Este blog es para todos. Si tienes sugerencias, dudas o quieres compartir tus experiencias, ¡contáctanos!
+
+![Linux Terminal](https://via.placeholder.com/800x400/16a085/ffffff?text=Linux+Terminal)
+
+---
+
+**¡Bienvenido a bordo y happy sysadmin!** 🚀
