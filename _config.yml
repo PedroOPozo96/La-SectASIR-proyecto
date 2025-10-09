@@ -147,3 +147,8 @@ compress_html:
   blanklines: false
   ignore:
     envs: [development]
+
+
+destination: ../La-SectASIR-html
+
+
