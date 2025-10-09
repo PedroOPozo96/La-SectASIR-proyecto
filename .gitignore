@@ -1,5 +1,7 @@
-_site
+_site/
+../La-SectASIR-html/
 .sass-cache
 .jekyll-cache
 .jekyll-metadata
 vendor
+
