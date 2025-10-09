@@ -48,51 +48,72 @@ print_header "Nuevo Post - La SectASIR"
 
 
 # ========================================
-# MODO: ELIMINAR POST
+# FUNCIÓN PARA ELIMINAR POSTS
 # ========================================
 if [ "$1" = "delete" ]; then
-    print_header "Eliminar Post - La SectASIR"
+    print_header "🗑️ Eliminación de Post"
 
-    echo -e "${YELLOW}Introduce una palabra o parte del nombre del post a eliminar:${NC}"
+    echo -e "${YELLOW}Introduce una palabra o parte del nombre o título del post a eliminar:${NC}"
     read post_name
 
-    # Buscar el archivo correspondiente
-    file_to_delete=$(ls _posts | grep "$post_name")
-
-    if [ -z "$file_to_delete" ]; then
-        print_error "No se encontró ningún post con ese nombre."
+    if [ -z "$post_name" ]; then
+        print_error "No se ha introducido ningún texto para buscar"
         exit 1
     fi
 
-    echo -e "${YELLOW}Se eliminará el post:${NC} _posts/$file_to_delete"
-    echo -e "${YELLOW}¿Confirmas? (s/n):${NC}"
+    echo ""
+    print_step "Buscando posts que coincidan con: ${post_name}"
+
+    # Buscar por nombre de archivo o por título dentro del YAML
+    matches=$(grep -ril --include="*.md" "$post_name" _posts/)
+
+    if [ -z "$matches" ]; then
+        print_error "No se encontró ningún post con ese nombre o título."
+        exit 1
+    fi
+
+    echo -e "${CYAN}Posts encontrados:${NC}"
+    echo "$matches" | nl
+
+    echo ""
+    echo -e "${YELLOW}Introduce el número del post que deseas eliminar:${NC}"
+    read selection
+
+    # Obtener el archivo seleccionado
+    target_file=$(echo "$matches" | sed -n "${selection}p")
+
+    if [ -z "$target_file" ]; then
+        print_error "Selección no válida."
+        exit 1
+    fi
+
+    echo ""
+    print_warning "Vas a eliminar el archivo: ${target_file}"
+    echo -e "${YELLOW}¿Estás seguro? (s/n):${NC}"
     read confirm
 
-    if [ "$confirm" = "s" ] || [ "$confirm" = "S" ]; then
-        rm "_posts/$file_to_delete"
-        print_success "Post eliminado localmente."
-
-        print_step "Regenerando sitio estático..."
-        bundle exec jekyll build
-
-        print_step "Actualizando repositorio fuente..."
-        git add .
-        git commit -m "Eliminar post: $file_to_delete"
-        git push origin main
-
-        print_step "Actualizando despliegue..."
-        cd ../La-SectASIR-html
-        git pull origin main
-        git add .
-        git commit -m "Eliminar post: $file_to_delete"
-        git push origin main --force
-        cd ..
-
-        print_success "El post se ha eliminado y desplegado correctamente."
-        echo -e "${YELLOW}Render actualizará el sitio en pocos minutos.${NC}"
-    else
-        print_warning "Operación cancelada."
+    if [ "$confirm" != "s" ] && [ "$confirm" != "S" ]; then
+        print_warning "Eliminación cancelada."
+        exit 0
     fi
+
+    rm -f "$target_file"
+    print_success "Post eliminado: ${target_file}"
+
+    # Confirmar si hacer commit y push
+    echo ""
+    echo -e "${YELLOW}¿Quieres hacer commit y push de la eliminación? (s/n):${NC}"
+    read do_push
+
+    if [ "$do_push" = "s" ] || [ "$do_push" = "S" ]; then
+        git add -A
+        git commit -m "Eliminado post: ${target_file}"
+        git push origin main
+        print_success "Eliminación publicada en GitHub"
+    else
+        print_warning "Cambios locales guardados, pero sin hacer push."
+    fi
+
     exit 0
 fi
 
