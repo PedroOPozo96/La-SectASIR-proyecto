@@ -46,6 +46,63 @@ print_warning() {
 clear
 print_header "Nuevo Post - La SectASIR"
 
+
+# ========================================
+# MODO: ELIMINAR POST
+# ========================================
+if [ "$1" = "delete" ]; then
+    print_header "Eliminar Post - La SectASIR"
+
+    echo -e "${YELLOW}Introduce una palabra o parte del nombre del post a eliminar:${NC}"
+    read post_name
+
+    # Buscar el archivo correspondiente
+    file_to_delete=$(ls _posts | grep "$post_name")
+
+    if [ -z "$file_to_delete" ]; then
+        print_error "No se encontró ningún post con ese nombre."
+        exit 1
+    fi
+
+    echo -e "${YELLOW}Se eliminará el post:${NC} _posts/$file_to_delete"
+    echo -e "${YELLOW}¿Confirmas? (s/n):${NC}"
+    read confirm
+
+    if [ "$confirm" = "s" ] || [ "$confirm" = "S" ]; then
+        rm "_posts/$file_to_delete"
+        print_success "Post eliminado localmente."
+
+        print_step "Regenerando sitio estático..."
+        bundle exec jekyll build
+
+        print_step "Actualizando repositorio fuente..."
+        git add .
+        git commit -m "Eliminar post: $file_to_delete"
+        git push origin main
+
+        print_step "Actualizando despliegue..."
+        cd ../La-SectASIR-html
+        git pull origin main
+        git add .
+        git commit -m "Eliminar post: $file_to_delete"
+        git push origin main --force
+        cd ..
+
+        print_success "El post se ha eliminado y desplegado correctamente."
+        echo -e "${YELLOW}Render actualizará el sitio en pocos minutos.${NC}"
+    else
+        print_warning "Operación cancelada."
+    fi
+    exit 0
+fi
+
+
+
+
+
+
+
+
 # ========================================
 # VERIFICACIONES INICIALES
 # ========================================
