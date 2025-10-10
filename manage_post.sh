@@ -141,9 +141,13 @@ edit_post() {
         if [ -f "./deploy.sh" ]; then
             ./deploy.sh
         else
-            echo -e "${RED}✗${NC} No se encuentra deploy.sh"
+            echo -e "${YELLOW}No se encuentra deploy.sh, regenerando y desplegando...${NC}"
+            # Lógica de despliegue integrada
+            bundle exec jekyll build
+            echo -e "${GREEN}✓${NC} Sitio regenerado"
+            echo ""
+            read -p "Presiona Enter para volver al menú..."
         fi
-        read -p "Presiona Enter para volver al menú..."
     fi
 }
 

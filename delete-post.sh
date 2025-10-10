@@ -91,14 +91,14 @@ while IFS= read -r post; do
     # Obtener nombre del archivo sin ruta
     filename=$(basename "$post")
     
-    # Extraer título del frontmatter
-    title=$(grep "^title:" "$post" | head -1 | sed 's/title: //' | tr -d '"' | tr -d "'")
+    # Extraer título del frontmatter (más flexible)
+    title=$(awk '/^title:/ {$1=""; print $0}' "$post" | head -1 | sed 's/^[[:space:]]*//' | tr -d '"' | tr -d "'")
     
     # Extraer fecha
-    date=$(grep "^date:" "$post" | head -1 | sed 's/date: //' | cut -d' ' -f1)
+    date=$(awk '/^date:/ {print $2}' "$post" | head -1)
     
     # Extraer categorías
-    categories=$(grep "^categories:" "$post" | head -1 | sed 's/categories: //')
+    categories=$(awk '/^categories:/ {$1=""; print $0}' "$post" | head -1 | sed 's/^[[:space:]]*//')
     
     # Si no hay título, usar el nombre del archivo
     if [ -z "$title" ]; then
@@ -120,7 +120,7 @@ while IFS= read -r post; do
     echo ""
     
     ((counter++))
-done < <(find _posts -name "*.md" -o -name "*.markdown" | sort -r)
+done < <(find _posts -type f \( -name "*.md" -o -name "*.markdown" \) 2>/dev/null | sort -r)
 
 # ========================================
 # SELECCIONAR POST A ELIMINAR
@@ -324,4 +324,3 @@ if [ -f "_config.yml" ]; then
 fi
 
 echo ""
-
