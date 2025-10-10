@@ -113,22 +113,22 @@ print_success "Sitio generado correctamente\n"
 # ========================================
 # COPIAR A REPOSITORIO HTML
 # ========================================
-print_step "Copiando archivos al repositorio HTML..."
 
-# Eliminar contenido anterior (excepto .git)
-find "$HTML_REPO" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} + 2>/dev/null
 
-# Copiar todo el contenido de _site
-cp -r _site/* "$HTML_REPO/" 2>/dev/null
+
+# Sin borrar todo el repositorio, sincroniza los cambios
+print_step "Sincronizando archivos con el repositorio HTML..."
+
+rsync -av --delete --exclude='.git' _site/ "$HTML_REPO/"
 
 if [ $? -eq 0 ]; then
-    print_success "Archivos copiados correctamente"
+    print_success "Archivos sincronizados correctamente"
 else
-    print_error "Error al copiar archivos"
+    print_error "Error al sincronizar archivos"
     exit 1
 fi
 
-echo ""
+
 
 # ========================================
 # COMMIT EN REPOSITORIO FUENTE

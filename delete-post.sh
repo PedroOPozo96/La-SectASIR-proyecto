@@ -223,11 +223,11 @@ if [ ! -d "$HTML_REPO" ]; then
     exit 1
 fi
 
-# Eliminar contenido anterior (excepto .git)
-find "$HTML_REPO" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
 
-# Copiar todo el contenido de _site
-cp -r _site/* "$HTML_REPO/"
+# Sin borrar todo, solo sincroniza los archivos nuevos/modificados
+rsync -av --delete --exclude='.git' _site/ "$HTML_REPO/"
+
+
 
 if [ $? -eq 0 ]; then
     print_success "Repositorio HTML actualizado"
