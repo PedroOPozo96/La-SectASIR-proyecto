@@ -1,14 +1,10 @@
 #!/bin/bash
 
 # ========================================
-# Script de Creación y Publicación de Posts
+# Script de Gestión de Posts
 # La SectASIR
 # ========================================
-# Automatiza:
-# 1. Creación de nuevo post
-# 2. Generación del sitio
-# 3. Commit en repo fuente
-# 4. Commit y push en repo de producción
+# Menú principal para gestionar posts
 # ========================================
 
 # Colores
@@ -17,452 +13,194 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
-NC='\033[0m' # Sin color
+MAGENTA='\033[0;35m'
+NC='\033[0m'
 
-# Funciones de mensajes
-print_header() {
+# Función para mostrar el menú
+show_menu() {
+    clear
     echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}  $1${NC}"
+    echo -e "${BLUE}     Gestión de Posts - La SectASIR${NC}"
     echo -e "${BLUE}========================================${NC}\n"
-}
-
-print_step() {
-    echo -e "${CYAN}==>${NC} $1"
-}
-
-print_success() {
-    echo -e "${GREEN}✓${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}✗${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}!${NC} $1"
-}
-
-# Banner
-clear
-print_header "Nuevo Post - La SectASIR"
-
-
-# ========================================
-# FUNCIÓN PARA ELIMINAR POSTS
-# ========================================
-if [ "$1" = "delete" ]; then
-    print_header "🗑️ Eliminación de Post"
-
-    echo -e "${YELLOW}Introduce una palabra o parte del nombre o título del post a eliminar:${NC}"
-    read post_name
-
-    if [ -z "$post_name" ]; then
-        print_error "No se ha introducido ningún texto para buscar"
-        exit 1
-    fi
-
+    
+    echo -e "${CYAN}Selecciona una opción:${NC}\n"
+    echo -e "${GREEN}[1]${NC} Crear nuevo post"
+    echo -e "${YELLOW}[2]${NC} Eliminar un post"
+    echo -e "${BLUE}[3]${NC} Listar todos los posts"
+    echo -e "${MAGENTA}[4]${NC} Editar un post existente"
+    echo -e "${CYAN}[5]${NC} Solo desplegar (sin crear post)"
+    echo -e "${RED}[0]${NC} Salir"
     echo ""
-    print_step "Buscando posts que coincidan con: ${post_name}"
+}
 
-    # Buscar por nombre de archivo o por título dentro del YAML
-    matches=$(grep -ril --include="*.md" "$post_name" _posts/)
-
-    if [ -z "$matches" ]; then
-        print_error "No se encontró ningún post con ese nombre o título."
-        exit 1
-    fi
-
-    echo -e "${CYAN}Posts encontrados:${NC}"
-    echo "$matches" | nl
-
-    echo ""
-    echo -e "${YELLOW}Introduce el número del post que deseas eliminar:${NC}"
-    read selection
-
-    # Obtener el archivo seleccionado
-    target_file=$(echo "$matches" | sed -n "${selection}p")
-
-    if [ -z "$target_file" ]; then
-        print_error "Selección no válida."
-        exit 1
-    fi
-
-    echo ""
-    print_warning "Vas a eliminar el archivo: ${target_file}"
-    echo -e "${YELLOW}¿Estás seguro? (s/n):${NC}"
-    read confirm
-
-    if [ "$confirm" != "s" ] && [ "$confirm" != "S" ]; then
-        print_warning "Eliminación cancelada."
-        exit 0
-    fi
-
-    rm -f "$target_file"
-    print_success "Post eliminado: ${target_file}"
-
-    # Confirmar si hacer commit y push
-    echo ""
-    echo -e "${YELLOW}¿Quieres hacer commit y push de la eliminación? (s/n):${NC}"
-    read do_push
-
-    if [ "$do_push" = "s" ] || [ "$do_push" = "S" ]; then
-        git add -A
-        git commit -m "Eliminado post: ${target_file}"
-        git push origin main
-        print_success "Eliminación publicada en GitHub"
+# Función para listar posts
+list_posts() {
+    clear
+    echo -e "${BLUE}========================================${NC}"
+    echo -e "${BLUE}     Lista de Posts${NC}"
+    echo -e "${BLUE}========================================${NC}\n"
+    
+    counter=1
+    while IFS= read -r post; do
+        filename=$(basename "$post")
+        title=$(grep "^title:" "$post" | head -1 | sed 's/title: //' | tr -d '"' | tr -d "'")
+        date=$(grep "^date:" "$post" | head -1 | sed 's/date: //' | cut -d' ' -f1)
+        categories=$(grep "^categories:" "$post" | head -1 | sed 's/categories: //')
+        
+        if [ -z "$title" ]; then
+            title="$filename"
+        fi
+        
+        echo -e "${MAGENTA}[$counter]${NC} ${GREEN}$title${NC}"
+        echo -e "    ${CYAN}Archivo:${NC} $filename"
+        if [ ! -z "$date" ]; then
+            echo -e "    ${CYAN}Fecha:${NC} $date"
+        fi
+        if [ ! -z "$categories" ]; then
+            echo -e "    ${CYAN}Categorías:${NC} $categories"
+        fi
+        echo ""
+        
+        ((counter++))
+    done < <(find _posts -name "*.md" -o -name "*.markdown" 2>/dev/null | sort -r)
+    
+    if [ $counter -eq 1 ]; then
+        echo -e "${YELLOW}No hay posts disponibles${NC}"
     else
-        print_warning "Cambios locales guardados, pero sin hacer push."
+        echo -e "${GREEN}Total de posts: $((counter-1))${NC}"
     fi
+    
+    echo ""
+    echo -e "${YELLOW}Presiona Enter para volver al menú...${NC}"
+    read
+}
 
-    exit 0
-fi
+# Función para editar posts
+edit_post() {
+    clear
+    echo -e "${BLUE}========================================${NC}"
+    echo -e "${BLUE}     Editar Post${NC}"
+    echo -e "${BLUE}========================================${NC}\n"
+    
+    counter=1
+    posts_array=()
+    
+    while IFS= read -r post; do
+        filename=$(basename "$post")
+        title=$(grep "^title:" "$post" | head -1 | sed 's/title: //' | tr -d '"' | tr -d "'")
+        
+        if [ -z "$title" ]; then
+            title="$filename"
+        fi
+        
+        posts_array+=("$post")
+        echo -e "${MAGENTA}[$counter]${NC} ${GREEN}$title${NC} ${CYAN}($filename)${NC}"
+        ((counter++))
+    done < <(find _posts -name "*.md" -o -name "*.markdown" 2>/dev/null | sort -r)
+    
+    if [ $counter -eq 1 ]; then
+        echo -e "${YELLOW}No hay posts disponibles${NC}"
+        echo ""
+        read -p "Presiona Enter para volver al menú..."
+        return
+    fi
+    
+    echo ""
+    read -p "Número del post a editar (0 para volver): " post_num
+    
+    if [ $post_num -eq 0 ]; then
+        return
+    fi
+    
+    if ! [[ "$post_num" =~ ^[0-9]+$ ]] || [ $post_num -lt 1 ] || [ $post_num -gt ${#posts_array[@]} ]; then
+        echo -e "${RED}✗${NC} Número inválido"
+        read -p "Presiona Enter para continuar..."
+        return
+    fi
+    
+    selected_post="${posts_array[$((post_num-1))]}"
+    
+    if command -v code &> /dev/null; then
+        code "$selected_post"
+    elif command -v nano &> /dev/null; then
+        nano "$selected_post"
+    elif command -v vim &> /dev/null; then
+        vim "$selected_post"
+    else
+        echo -e "${YELLOW}!${NC} No se encontró un editor"
+        echo "Abre manualmente: $selected_post"
+        read -p "Presiona Enter para continuar..."
+        return
+    fi
+    
+    echo ""
+    echo -e "${YELLOW}¿Deseas desplegar los cambios? (s/n):${NC}"
+    read deploy
+    
+    if [ "$deploy" = "s" ] || [ "$deploy" = "S" ]; then
+        if [ -f "./deploy.sh" ]; then
+            ./deploy.sh
+        else
+            echo -e "${RED}✗${NC} No se encuentra deploy.sh"
+        fi
+        read -p "Presiona Enter para volver al menú..."
+    fi
+}
 
-
-
-
-
-
-
-
-# ========================================
-# VERIFICACIONES INICIALES
-# ========================================
-print_step "Verificando entorno..."
-
-# Verificar que estamos en un proyecto Jekyll
+# Verificar que estamos en el proyecto correcto
 if [ ! -f "_config.yml" ]; then
-    print_error "No se encuentra _config.yml"
+    echo -e "${RED}✗${NC} No se encuentra _config.yml"
     echo "Este script debe ejecutarse desde la raíz del proyecto Jekyll"
     exit 1
 fi
 
-# Verificar que existe la carpeta _posts
-if [ ! -d "_posts" ]; then
-    print_error "No existe la carpeta _posts"
-    exit 1
-fi
-
-print_success "Entorno verificado\n"
-
-# ========================================
-# RECOPILAR INFORMACIÓN DEL POST
-# ========================================
-print_header "Información del Nuevo Post"
-
-# Título del post
-echo -e "${YELLOW}Introduce el título del post:${NC}"
-read post_title
-
-if [ -z "$post_title" ]; then
-    print_error "El título no puede estar vacío"
-    exit 1
-fi
-
-# Crear slug (nombre del archivo)
-post_slug=$(echo "$post_title" | iconv -t ascii//TRANSLIT | sed -r 's/[^a-zA-Z0-9]+/-/g' | sed -r 's/^-+\|-+$//g' | tr A-Z a-z)
-
-# Fecha actual
-current_date=$(date +%Y-%m-%d)
-current_datetime=$(date +"%Y-%m-%d %H:%M:%S %z")
-
-# Nombre del archivo
-filename="_posts/${current_date}-${post_slug}.md"
-
-# Verificar si ya existe
-if [ -f "$filename" ]; then
-    print_warning "Ya existe un post con ese nombre hoy"
-    echo -e "${YELLOW}¿Quieres sobrescribirlo? (s/n):${NC}"
-    read overwrite
-    if [ "$overwrite" != "s" ] && [ "$overwrite" != "S" ]; then
-        print_error "Operación cancelada"
-        exit 1
-    fi
-fi
-
-# Categorías
-echo -e "\n${YELLOW}Introduce las categorías (separadas por coma):${NC}"
-echo -e "${CYAN}Ejemplos: Sistemas Linux, Redes, Seguridad${NC}"
-read categories_input
-
-# Convertir categorías a formato YAML
-if [ -z "$categories_input" ]; then
-    categories="[General]"
-else
-    # Separar por comas y formatear
-    IFS=',' read -ra CATS <<< "$categories_input"
-    categories="["
-    for i in "${!CATS[@]}"; do
-        cat=$(echo "${CATS[$i]}" | xargs) # Trim espacios
-        if [ $i -eq 0 ]; then
-            categories="${categories}${cat}"
-        else
-            categories="${categories}, ${cat}"
-        fi
-    done
-    categories="${categories}]"
-fi
-
-# Etiquetas
-echo -e "\n${YELLOW}Introduce las etiquetas (separadas por coma):${NC}"
-echo -e "${CYAN}Ejemplos: linux, debian, tutorial, redes${NC}"
-read tags_input
-
-# Convertir etiquetas a formato YAML
-if [ -z "$tags_input" ]; then
-    tags="[]"
-else
-    IFS=',' read -ra TAGS <<< "$tags_input"
-    tags="["
-    for i in "${!TAGS[@]}"; do
-        tag=$(echo "${TAGS[$i]}" | xargs | tr '[:upper:]' '[:lower:]') # Trim y minúsculas
-        if [ $i -eq 0 ]; then
-            tags="${tags}${tag}"
-        else
-            tags="${tags}, ${tag}"
-        fi
-    done
-    tags="${tags}]"
-fi
-
-# Pin (fijar post)
-echo -e "\n${YELLOW}¿Quieres fijar este post en la página principal? (s/n):${NC}"
-read pin_post
-pin_line=""
-if [ "$pin_post" = "s" ] || [ "$pin_post" = "S" ]; then
-    pin_line="pin: true"
-fi
-
-# ========================================
-# CREAR EL ARCHIVO DEL POST
-# ========================================
-print_step "Creando archivo del post: ${filename}"
-
-cat > "$filename" << EOF
----
-title: ${post_title}
-date: ${current_datetime}
-categories: ${categories}
-tags: ${tags}
-${pin_line}
----
-
-# ${post_title}
-
-Escribe aquí la introducción de tu post...
-
-## Sección 1
-
-Contenido de la primera sección.
-
-### Subsección 1.1
-
-Detalles...
-
-\`\`\`bash
-# Ejemplo de código
-echo "Hola Mundo"
-\`\`\`
-
-## Sección 2
-
-Más contenido...
-
-### Lista de elementos
-
-- Elemento 1
-- Elemento 2
-- Elemento 3
-
-### Comandos importantes
-
-\`\`\`bash
-# Comando de ejemplo
-sudo apt update
-sudo apt upgrade -y
-\`\`\`
-
-## Conclusión
-
-Resumen y conclusiones del post.
-
-## Referencias
-
-- [Enlace 1](https://ejemplo.com)
-- [Enlace 2](https://ejemplo.com)
-
-![Imagen de ejemplo](https://via.placeholder.com/800x400)
-EOF
-
-print_success "Post creado: ${filename}\n"
-
-# ========================================
-# ABRIR EDITOR
-# ========================================
-echo -e "${YELLOW}¿Quieres abrir el post en un editor ahora? (s/n):${NC}"
-read open_editor
-
-if [ "$open_editor" = "s" ] || [ "$open_editor" = "S" ]; then
-    # Detectar editor disponible
-    if command -v code &> /dev/null; then
-        code "$filename"
-    elif command -v nano &> /dev/null; then
-        nano "$filename"
-    elif command -v vim &> /dev/null; then
-        vim "$filename"
-    else
-        print_warning "No se encontró un editor. Edita manualmente: $filename"
-    fi
+# Bucle principal del menú
+while true; do
+    show_menu
+    read -p "Opción: " option
     
-    echo -e "\n${YELLOW}Presiona Enter cuando hayas terminado de editar...${NC}"
-    read
-fi
-
-# ========================================
-# PREVISUALIZACIÓN LOCAL
-# ========================================
-echo -e "\n${YELLOW}¿Quieres previsualizar el sitio localmente antes de publicar? (s/n):${NC}"
-read preview
-
-if [ "$preview" = "s" ] || [ "$preview" = "S" ]; then
-    print_step "Iniciando servidor local..."
-    echo -e "${CYAN}Abre http://localhost:4000 en tu navegador${NC}"
-    echo -e "${CYAN}Presiona Ctrl+C para detener el servidor y continuar${NC}\n"
-    bundle exec jekyll serve --future
-fi
-
-# ========================================
-# CONFIRMAR PUBLICACIÓN
-# ========================================
-echo -e "\n${YELLOW}¿Deseas publicar este post ahora? (s/n):${NC}"
-read confirm_publish
-
-if [ "$confirm_publish" != "s" ] && [ "$confirm_publish" != "S" ]; then
-    print_warning "Publicación cancelada"
-    echo "El post se ha guardado en: $filename"
-    echo "Puedes publicarlo más tarde ejecutando: ./deploy.sh"
-    exit 0
-fi
-
-# ========================================
-# GENERAR SITIO
-# ========================================
-print_header "Publicando Post"
-
-print_step "Generando sitio estático..."
-bundle exec jekyll build
-
-if [ $? -ne 0 ]; then
-    print_error "Error al generar el sitio"
-    exit 1
-fi
-print_success "Sitio generado\n"
-
-# ========================================
-# COMMIT EN REPOSITORIO FUENTE
-# ========================================
-print_step "Guardando en repositorio fuente..."
-
-git add .
-
-commit_message="Nuevo post: ${post_title}"
-
-git commit -m "$commit_message"
-
-if [ $? -eq 0 ]; then
-    print_success "Commit realizado en repo fuente"
-    
-    # Preguntar si hacer push
-    echo -e "${YELLOW}¿Hacer push al repositorio fuente remoto? (s/n):${NC}"
-    read push_source
-    
-    if [ "$push_source" = "s" ] || [ "$push_source" = "S" ]; then
-        git push origin main
-        if [ $? -eq 0 ]; then
-            print_success "Push completado en repo fuente"
-        else
-            print_error "Error al hacer push en repo fuente"
-        fi
-    fi
-else
-    print_warning "No hay cambios para hacer commit en repo fuente"
-fi
-
-echo ""
-
-# ========================================
-# DESPLEGAR EN PRODUCCIÓN
-# ========================================
-print_step "Desplegando en producción..."
-
-# Directorio del repositorio HTML
-HTML_REPO="../La-SectASIR-html"
-
-# Verificar que existe el directorio
-if [ ! -d "$HTML_REPO" ]; then
-    print_error "No existe el directorio: $HTML_REPO"
-    echo "Crea el directorio e inicializa el repositorio git primero"
-    exit 1
-fi
-
-cd "$HTML_REPO"
-
-# Verificar si es un repositorio git
-if [ ! -d ".git" ]; then
-    print_error "El directorio $HTML_REPO no es un repositorio git"
-    echo "Inicializa el repositorio manualmente primero con:"
-    echo "  cd $HTML_REPO"
-    echo "  git init"
-    echo "  git remote add origin <URL-del-repositorio-remoto>"
-    cd - > /dev/null
-    exit 1
-fi
-
-git add .
-
-# Verificar si hay cambios
-if [[ -z $(git status -s) ]]; then
-    print_warning "No hay cambios para desplegar"
-    cd ..
-    exit 0
-fi
-
-git commit -m "$commit_message"
-
-# Push a producción
-git push origin main --force
-
-if [ $? -eq 0 ]; then
-    print_success "Despliegue completado"
-else
-    print_error "Error al desplegar"
-    cd ..
-    exit 1
-fi
-
-cd ..
-
-# ========================================
-# RESUMEN FINAL
-# ========================================
-echo ""
-print_header "✓ Publicación Completada"
-
-echo -e "${GREEN}Post publicado exitosamente:${NC}"
-echo -e "  ${CYAN}Título:${NC} $post_title"
-echo -e "  ${CYAN}Archivo:${NC} $filename"
-echo -e "  ${CYAN}Categorías:${NC} $categories"
-echo -e "  ${CYAN}Etiquetas:${NC} $tags"
-echo ""
-
-# Obtener URL del sitio
-if [ -f "_config.yml" ]; then
-    site_url=$(grep "^url:" _config.yml | awk '{print $2}' | tr -d '"' | tr -d "'")
-    if [ ! -z "$site_url" ]; then
-        echo -e "${GREEN}Tu sitio se está actualizando en:${NC} ${BLUE}${site_url}${NC}"
-        echo -e "${YELLOW}Nota: Puede tardar unos minutos en verse reflejado${NC}"
-    fi
-fi
-
-echo ""
-echo -e "${CYAN}¡Gracias por publicar en La SectASIR!${NC}"
-echo ""
+    case $option in
+        1)
+            clear
+            if [ -f "./new-post.sh" ]; then
+                ./new-post.sh
+            else
+                echo -e "${RED}✗${NC} No se encuentra el script new-post.sh"
+                read -p "Presiona Enter para continuar..."
+            fi
+            ;;
+        2)
+            clear
+            if [ -f "./delete-post.sh" ]; then
+                ./delete-post.sh
+            else
+                echo -e "${RED}✗${NC} No se encuentra el script delete-post.sh"
+                read -p "Presiona Enter para continuar..."
+            fi
+            ;;
+        3)
+            list_posts
+            ;;
+        4)
+            edit_post
+            ;;
+        5)
+            clear
+            if [ -f "./deploy.sh" ]; then
+                ./deploy.sh
+            else
+                echo -e "${RED}✗${NC} No se encuentra el script deploy.sh"
+                read -p "Presiona Enter para continuar..."
+            fi
+            ;;
+        0)
+            clear
+            echo -e "\n${CYAN}¡Hasta pronto!${NC}\n"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}✗${NC} Opción inválida"
+            sleep 1
+            ;;
+    esac
+done
