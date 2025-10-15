@@ -224,41 +224,90 @@ if [ ! -d "$HTML_REPO" ]; then
 fi
 
 # IMPORTANTE: Verificar que _site existe y tiene contenido
-if [ ! -d "_site" ] || [ -z "$(ls -A _site 2>/dev/null)" ]; then
-    print_error "El directorio _site está vacío o no existe"
+if [ ! -d "_site" ]; then
+    print_error "El directorio _site no existe"
+    print_error "Regenerando sitio..."
+    bundle exec jekyll build
+    
+    if [ ! -d "_site" ]; then
+        print_error "No se pudo generar el sitio"
+        exit 1
+    fi
+fi
+
+# Verificar que _site tiene contenido
+site_files=$(find _site -type f 2>/dev/null | wc -l)
+
+if [ $site_files -eq 0 ]; then
+    print_error "El directorio _site está vacío"
     print_error "No se actualizará el repositorio HTML para evitar perder contenido"
     exit 1
 fi
 
-# Hacer backup del .git antes de limpiar
+print_success "Sitio generado correctamente con $site_files archivos"
+
+# Hacer backup temporal del .git
 if [ -d "$HTML_REPO/.git" ]; then
-    print_step "Haciendo backup del repositorio git..."
-    cp -r "$HTML_REPO/.git" "/tmp/.git-backup-$(date +%s)"
+    print_step "Protegiendo repositorio git..."
+    temp_git_backup="/tmp/.git-backup-lasectasir-$(date +%s)"
+    cp -r "$HTML_REPO/.git" "$temp_git_backup"
+    print_success "Backup creado en: $temp_git_backup"
 fi
 
-# Eliminar contenido anterior (excepto .git)
-print_step "Limpiando directorio HTML (manteniendo .git)..."
-find "$HTML_REPO" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} + 2>/dev/null
+# MÉTODO SEGURO: Sincronizar en lugar de eliminar todo
+print_step "Sincronizando archivos (método seguro)..."
 
-# Copiar todo el contenido de _site
-print_step "Copiando nuevo contenido..."
-cp -r _site/* "$HTML_REPO/" 2>/dev/null
+# Usar rsync si está disponible (más seguro)
+if command -v rsync &> /dev/null; then
+    rsync -av --delete --exclude='.git' _site/ "$HTML_REPO/"
+    sync_result=$?
+else
+    # Método alternativo sin rsync
+    print_warning "rsync no disponible, usando método alternativo..."
+    
+    # Eliminar solo archivos HTML, CSS, JS, imágenes del post actual
+    # NO tocar assets/img/avatar.jpg ni otras configuraciones
+    find "$HTML_REPO" -type f \( -name "*.html" -o -name "*.xml" -o -name "*.json" \) ! -path "*/.git/*" -delete 2>/dev/null
+    
+    # Copiar nuevo contenido
+    cp -r _site/* "$HTML_REPO/" 2>/dev/null
+    sync_result=$?
+fi
 
-if [ $? -eq 0 ]; then
-    print_success "Repositorio HTML actualizado"
+# Restaurar .git si se perdió (no debería pasar, pero por seguridad)
+if [ ! -d "$HTML_REPO/.git" ] && [ -d "$temp_git_backup" ]; then
+    print_warning "Restaurando repositorio git desde backup..."
+    cp -r "$temp_git_backup" "$HTML_REPO/.git"
+fi
+
+if [ $sync_result -eq 0 ]; then
+    print_success "Repositorio HTML actualizado correctamente"
     
-    # Verificar que se copió algo
-    file_count=$(find "$HTML_REPO" -mindepth 1 -maxdepth 1 ! -name '.git' | wc -l)
-    echo -e "  ${CYAN}Archivos copiados: $file_count${NC}"
+    # Verificar que se copió contenido
+    html_files=$(find "$HTML_REPO" -type f -name "*.html" ! -path "*/.git/*" 2>/dev/null | wc -l)
+    print_success "Archivos HTML en el repositorio: $html_files"
     
-    if [ $file_count -eq 0 ]; then
-        print_error "¡ERROR! No se copió ningún archivo"
-        print_error "Restaurando desde backup..."
-        # Aquí podrías restaurar el backup si es necesario
+    if [ $html_files -eq 0 ]; then
+        print_error "¡ERROR CRÍTICO! No hay archivos HTML en el repositorio"
+        
+        if [ -d "$temp_git_backup" ]; then
+            print_warning "Considera restaurar desde el backup o regenerar manualmente"
+        fi
+        
         exit 1
     fi
+    
+    # Limpiar backup temporal si todo fue bien
+    if [ -d "$temp_git_backup" ]; then
+        rm -rf "$temp_git_backup"
+    fi
 else
-    print_error "Error al actualizar repositorio HTML"
+    print_error "Error al sincronizar archivos"
+    
+    if [ -d "$temp_git_backup" ]; then
+        print_warning "Backup disponible en: $temp_git_backup"
+    fi
+    
     exit 1
 fi
 

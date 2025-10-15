@@ -32,7 +32,8 @@ show_menu() {
     echo -e "${GREEN}[6]${NC} Añadir imágenes a un post"
     echo -e "${YELLOW}[7]${NC} Verificar y limpiar posts"
     echo -e "${MAGENTA}[8]${NC} Recuperar posts perdidos"
-    echo -e "${BLUE}[9]${NC} Solo desplegar (sin crear post)"
+    echo -e "${RED}[9]${NC} Diagnosticar problemas"
+    echo -e "${BLUE}[10]${NC} Solo desplegar (sin crear post)"
     echo -e "${RED}[0]${NC} Salir"
     echo ""
 }
@@ -220,6 +221,15 @@ while true; do
             fi
             ;;
         8)
+            clear
+            if [ -f "./recover-posts.sh" ]; then
+                ./recover-posts.sh
+            else
+                echo -e "${RED}✗${NC} No se encuentra el script recover-posts.sh"
+                read -p "Presiona Enter para continuar..."
+            fi
+            ;;
+        9)
             clear
             if [ -f "./deploy.sh" ]; then
                 ./deploy.sh
