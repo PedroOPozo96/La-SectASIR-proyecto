@@ -28,7 +28,9 @@ show_menu() {
     echo -e "${YELLOW}[2]${NC} Eliminar un post"
     echo -e "${BLUE}[3]${NC} Listar todos los posts"
     echo -e "${MAGENTA}[4]${NC} Editar un post existente"
-    echo -e "${CYAN}[5]${NC} Solo desplegar (sin crear post)"
+    echo -e "${CYAN}[5]${NC} Importar desde Notion"
+    echo -e "${GREEN}[6]${NC} Añadir imágenes a un post"
+    echo -e "${YELLOW}[7]${NC} Solo desplegar (sin crear post)"
     echo -e "${RED}[0]${NC} Salir"
     echo ""
 }
@@ -192,8 +194,10 @@ while true; do
             clear
             if [ -f "./deploy.sh" ]; then
                 ./deploy.sh
+                read -p "Presiona Enter para volver al menú..."
             else
                 echo -e "${RED}✗${NC} No se encuentra el script deploy.sh"
+                echo -e "${YELLOW}Puedes crearlo o los cambios se desplegarán al crear/eliminar posts${NC}"
                 read -p "Presiona Enter para continuar..."
             fi
             ;;
