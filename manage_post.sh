@@ -30,7 +30,9 @@ show_menu() {
     echo -e "${MAGENTA}[4]${NC} Editar un post existente"
     echo -e "${CYAN}[5]${NC} Importar desde Notion"
     echo -e "${GREEN}[6]${NC} Añadir imágenes a un post"
-    echo -e "${YELLOW}[7]${NC} Solo desplegar (sin crear post)"
+    echo -e "${YELLOW}[7]${NC} Verificar y limpiar posts"
+    echo -e "${MAGENTA}[8]${NC} Recuperar posts perdidos"
+    echo -e "${BLUE}[9]${NC} Solo desplegar (sin crear post)"
     echo -e "${RED}[0]${NC} Salir"
     echo ""
 }
@@ -191,6 +193,33 @@ while true; do
             edit_post
             ;;
         5)
+            clear
+            if [ -f "./import-notion.sh" ]; then
+                ./import-notion.sh
+            else
+                echo -e "${RED}✗${NC} No se encuentra el script import-notion.sh"
+                read -p "Presiona Enter para continuar..."
+            fi
+            ;;
+        6)
+            clear
+            if [ -f "./add-images.sh" ]; then
+                ./add-images.sh
+            else
+                echo -e "${RED}✗${NC} No se encuentra el script add-images.sh"
+                read -p "Presiona Enter para continuar..."
+            fi
+            ;;
+        7)
+            clear
+            if [ -f "./verify-posts.sh" ]; then
+                ./verify-posts.sh
+            else
+                echo -e "${RED}✗${NC} No se encuentra el script verify-posts.sh"
+                read -p "Presiona Enter para continuar..."
+            fi
+            ;;
+        8)
             clear
             if [ -f "./deploy.sh" ]; then
                 ./deploy.sh
