@@ -1,18 +1,21 @@
 ---
-title: "Prueba: Introducción a la implantación de aplicaciones web"
-date: 2025-10-30 12:54:25 +0100
-categories: [Redes]
-tags: [linux]
-pin: true
+layout: post
+title: "Prueba: Introducción a la Implantación de Aplicaciones Web"
+date: 2025-10-30
+categories: jekyll
 ---
 
-# Prueba: Introducción a la implantación de aplicaciones web
+Tu contenido aquí...
 
-Escribe aquí la introducción de tu post...
+
+
+# Prueba: Introducción a la implantación de Aplicaciones Web
+
+Pedro Oliver Pozo 30 de Octubre.
 
 ## Sección 1
 
-Pedro Oliver Pozo 30 de Octubre
+Contenido de la primera sección.
 
 ### Subsección 1.1
 
