@@ -1,5 +1,5 @@
 ---
-title: Prueba: Introducción a la implantación de aplicaciones web
+title: "Prueba: Introducción a la implantación de aplicaciones web"
 date: 2025-10-30 12:54:25 +0100
 categories: [Redes]
 tags: [linux]
