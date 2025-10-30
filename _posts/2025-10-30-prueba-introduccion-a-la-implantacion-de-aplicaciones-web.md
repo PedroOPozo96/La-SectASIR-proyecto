@@ -1,18 +1,18 @@
 ---
-title: Prueba: Introducción a la implantación de aplicaciones Web
-date: 2025-10-30 12:49:58 +0100
-categories: [Sistemas Linux]
+title: Prueba: Introducción a la implantación de aplicaciones web
+date: 2025-10-30 12:54:25 +0100
+categories: [Redes]
 tags: [linux]
 pin: true
 ---
 
-# Prueba: Introducción a la implantación de aplicaciones Web
+# Prueba: Introducción a la implantación de aplicaciones web
 
-Pedro Oliver Pozo 30 de Octubre de 2025
+Escribe aquí la introducción de tu post...
 
 ## Sección 1
 
-Contenido de la primera sección.
+Pedro Oliver Pozo 30 de Octubre
 
 ### Subsección 1.1
 
